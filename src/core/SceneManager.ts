@@ -4,6 +4,7 @@ import { BlackHole } from '../objects/BlackHole';
 import { AccretionDisk } from '../objects/AccretionDisk';
 import { CosmicPlume } from '../objects/CosmicPlume';
 import { OrbitalCarousel } from '../objects/OrbitalCarousel';
+import { CosmicEnvironment } from '../objects/CosmicEnvironment';
 
 export class SceneManager {
   public container: HTMLElement;
@@ -16,6 +17,7 @@ export class SceneManager {
   public accretionDisk: AccretionDisk;
   public cosmicPlume: CosmicPlume;
   public orbitalCarousel: OrbitalCarousel;
+  public cosmicEnvironment: CosmicEnvironment;
 
   private isRunning: boolean = false;
   private resizeObserver: ResizeObserver | null = null;
@@ -75,11 +77,16 @@ export class SceneManager {
     this.orbitalCarousel = new OrbitalCarousel();
     this.scene.add(this.orbitalCarousel);
 
+    // 10. Cosmic Environment (Starfield, Nebula, Inward Dust)
+    this.cosmicEnvironment = new CosmicEnvironment();
+    this.scene.add(this.cosmicEnvironment);
+
     this.registerUpdate((elapsedTime) => {
       this.blackHole.update(elapsedTime);
       this.accretionDisk.update(elapsedTime, this.camera.position);
       this.cosmicPlume.update(elapsedTime);
       this.orbitalCarousel.update(elapsedTime, this.camera.position);
+      this.cosmicEnvironment.update(elapsedTime);
     });
 
     this.setupEvents();

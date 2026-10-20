@@ -3,6 +3,7 @@ import { CameraController } from './CameraController';
 import { BlackHole } from '../objects/BlackHole';
 import { AccretionDisk } from '../objects/AccretionDisk';
 import { CosmicPlume } from '../objects/CosmicPlume';
+import { OrbitalCarousel } from '../objects/OrbitalCarousel';
 
 export class SceneManager {
   public container: HTMLElement;
@@ -14,6 +15,7 @@ export class SceneManager {
   public blackHole: BlackHole;
   public accretionDisk: AccretionDisk;
   public cosmicPlume: CosmicPlume;
+  public orbitalCarousel: OrbitalCarousel;
 
   private isRunning: boolean = false;
   private resizeObserver: ResizeObserver | null = null;
@@ -69,10 +71,15 @@ export class SceneManager {
     this.cosmicPlume = new CosmicPlume();
     this.scene.add(this.cosmicPlume);
 
+    // 9. Orbital Carousel & Holographic Cards
+    this.orbitalCarousel = new OrbitalCarousel();
+    this.scene.add(this.orbitalCarousel);
+
     this.registerUpdate((elapsedTime) => {
       this.blackHole.update(elapsedTime);
       this.accretionDisk.update(elapsedTime, this.camera.position);
       this.cosmicPlume.update(elapsedTime);
+      this.orbitalCarousel.update(elapsedTime, this.camera.position);
     });
 
     this.setupEvents();

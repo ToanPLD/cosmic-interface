@@ -33,6 +33,8 @@ export class CameraController {
   }
 
   private bindEvents(): void {
+    if (typeof window === 'undefined') return;
+
     window.addEventListener('mousemove', (e: MouseEvent) => {
       // Normalized coordinates [-1, 1]
       this.targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;

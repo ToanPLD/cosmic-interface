@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CameraController } from './CameraController';
+import { PostProcessingManager } from './PostProcessing';
 import { BlackHole } from '../objects/BlackHole';
 import { AccretionDisk } from '../objects/AccretionDisk';
 import { CosmicPlume } from '../objects/CosmicPlume';
@@ -12,6 +13,7 @@ export class SceneManager {
   public camera: THREE.PerspectiveCamera;
   public renderer: THREE.WebGLRenderer;
   public cameraController: CameraController;
+  public postProcessing: PostProcessingManager;
   public clock: THREE.Clock;
   public blackHole: BlackHole;
   public accretionDisk: AccretionDisk;
@@ -58,7 +60,10 @@ export class SceneManager {
       loopPeriod: 12.0
     });
 
-    // 5. Clock
+    // 5. Postprocessing Pipeline
+    this.postProcessing = new PostProcessingManager(this.renderer, this.scene, this.camera);
+
+    // 6. Clock
     this.clock = new THREE.Clock();
 
     // 6. Black Hole Singularity Core
@@ -102,6 +107,7 @@ export class SceneManager {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    this.postProcessing.setSize(width, height);
   }
 
   public registerUpdate(callback: (elapsedTime: number, deltaTime: number) => void): void {
@@ -134,7 +140,7 @@ export class SceneManager {
       callback(elapsedTime, deltaTime);
     }
 
-    // Direct render fallback (will be routed through post-processing composer in Task 7)
-    this.renderer.render(this.scene, this.camera);
+    // Postprocessing render pipeline
+    this.postProcessing.render();
   };
 }

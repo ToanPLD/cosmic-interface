@@ -78,16 +78,17 @@ export const CosmicPlumeShader = {
       float radialEdge = sin(vUv.y * 3.14159265);
       float coreFactor = pow(radialEdge, 2.2);
 
-      // Longitudinal intensity: denser and hotter as it approaches the singularity (vUv.x -> 1.0)
-      float approachHotness = pow(vUv.x, 1.5);
-      float startFade = smoothstep(0.0, 0.25, vUv.x);
+      // Longitudinal intensity: denser and hotter as it approaches the accretion ring
+      float approachHotness = pow(vUv.x, 1.2);
+      float startFade = smoothstep(0.0, 0.2, vUv.x);
+      float endFade = smoothstep(1.0, 0.85, vUv.x);
 
       // Color composition
       vec3 color = mix(uColorDeep, uColorMid, turbulence);
       color = mix(color, uColorCore, coreFactor * approachHotness);
 
-      float alpha = coreFactor * (0.4 + turbulence * 0.6) * startFade * (0.5 + approachHotness * 0.8);
-      gl_FragColor = vec4(color * uIntensity * (1.0 + approachHotness * 0.5), alpha);
+      float alpha = coreFactor * (0.35 + turbulence * 0.4) * startFade * (0.4 + endFade * 0.6) * 0.8;
+      gl_FragColor = vec4(color * uIntensity * 1.1, alpha);
     }
   `
 };

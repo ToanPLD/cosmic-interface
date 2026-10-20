@@ -6,8 +6,8 @@ export const GravitationalLensingShader = {
     uColorInner: { value: new THREE.Color(0xffffff) },
     uColorOuter: { value: new THREE.Color(0x00d4ff) },
     uColorEdge: { value: new THREE.Color(0x1d4ed8) },
-    uFresnelPower: { value: 2.8 },
-    uIntensity: { value: 2.4 }
+    uFresnelPower: { value: 6.0 },
+    uIntensity: { value: 1.2 }
   },
 
   vertexShader: `
@@ -41,20 +41,22 @@ export const GravitationalLensingShader = {
       vec3 normal = normalize(vNormal);
       vec3 viewDir = normalize(vViewPosition);
 
-      // Fresnel factor: peak intensity at the tangent perimeter (Einstein ring)
+      // Sharp Fresnel rim: ONLY the perimeter tangent ring radiates light (Einstein ring)
+      // When facing directly (center), fresnel is strictly 0.0 -> center remains pure pitch black!
       float NdotV = abs(dot(normal, viewDir));
       float fresnel = pow(1.0 - NdotV, uFresnelPower);
 
       // Subtle dynamic gravitational ripple (harmonic 12s loop)
-      float wave = sin(uTime * (6.28318530718 / 12.0) * 2.0 + vWorldPosition.y * 3.0) * 0.08 + 0.92;
+      float wave = sin(uTime * (6.28318530718 / 12.0) * 2.0 + vWorldPosition.y * 3.0) * 0.05 + 0.95;
 
-      // Color gradient from white-hot inner tangent to intense cyan and deep electric blue
-      vec3 color = mix(uColorEdge, uColorOuter, pow(fresnel, 1.5));
-      color = mix(color, uColorInner, pow(fresnel, 4.0));
+      // Color gradient from white tangent rim to electric cyan
+      vec3 color = mix(uColorOuter, uColorInner, pow(fresnel, 2.0));
 
-      float alpha = clamp(pow(fresnel, 1.8) * uIntensity * wave, 0.0, 1.0);
+      // Strictly zero in center, bright on rim
+      vec3 finalColor = color * (uIntensity * pow(fresnel, 2.5) * wave);
+      float alpha = clamp(pow(fresnel, 3.0) * uIntensity, 0.0, 1.0);
 
-      gl_FragColor = vec4(color * uIntensity, alpha);
+      gl_FragColor = vec4(finalColor, alpha);
     }
   `
 };

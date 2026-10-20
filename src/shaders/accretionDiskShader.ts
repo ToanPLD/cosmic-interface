@@ -4,13 +4,13 @@ export const AccretionDiskShader = {
   uniforms: {
     uTime: { value: 0 },
     uInnerRadius: { value: 1.85 },
-    uOuterRadius: { value: 7.2 },
+    uOuterRadius: { value: 6.8 },
     uColorCore: { value: new THREE.Color(0xffffff) },
     uColorMid: { value: new THREE.Color(0x00f5ff) },
     uColorOuter: { value: new THREE.Color(0x1e40af) },
     uColorDark: { value: new THREE.Color(0x020617) },
     uCameraPosition: { value: new THREE.Vector3() },
-    uIntensity: { value: 1.8 }
+    uIntensity: { value: 2.2 }
   },
 
   vertexShader: `
@@ -18,6 +18,7 @@ export const AccretionDiskShader = {
     varying vec3 vWorldPosition;
     varying vec3 vLocalPosition;
     varying vec3 vNormal;
+    varying vec3 vWorldTangent;
 
     void main() {
       vUv = uv;
@@ -25,6 +26,11 @@ export const AccretionDiskShader = {
       vec4 worldPos = modelMatrix * vec4(position, 1.0);
       vWorldPosition = worldPos.xyz;
       vNormal = normalize(normalMatrix * normal);
+
+      // Compute world tangent in vertex shader
+      vec3 tangent = normalize(vec3(-position.y, position.x, 0.0));
+      vWorldTangent = normalize((modelMatrix * vec4(tangent, 0.0)).xyz);
+
       gl_Position = projectionMatrix * viewMatrix * worldPos;
     }
   `,
@@ -44,6 +50,7 @@ export const AccretionDiskShader = {
     varying vec3 vWorldPosition;
     varying vec3 vLocalPosition;
     varying vec3 vNormal;
+    varying vec3 vWorldTangent;
 
     // Simplex noise helper
     vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -84,43 +91,40 @@ export const AccretionDiskShader = {
       // Keplerian differential shear: inner regions orbit faster
       // Strictly harmonic 12s period: base frequency = 2*PI/12
       float baseOmega = 6.28318530718 / 12.0;
-      float shear = baseOmega * 4.0 / pow(max(rNorm * 3.0 + 0.5, 0.5), 1.25);
+      float shear = baseOmega * 3.5 / pow(max(rNorm * 2.5 + 0.6, 0.6), 1.25);
       float angleFlow = theta + uTime * shear;
 
       // Multi-frequency noise for plasma swirls
-      vec2 noiseCoord1 = vec2(cos(angleFlow) * r * 1.5, sin(angleFlow) * r * 1.5);
+      vec2 noiseCoord1 = vec2(cos(angleFlow) * r * 1.4, sin(angleFlow) * r * 1.4);
       float n1 = snoise(noiseCoord1) * 0.5 + 0.5;
 
-      vec2 noiseCoord2 = vec2(cos(angleFlow * 2.0) * r * 2.8, sin(angleFlow * 2.0) * r * 2.8);
-      float n2 = snoise(noiseCoord2 + vec2(uTime * 0.2, 0.0)) * 0.5 + 0.5;
+      vec2 noiseCoord2 = vec2(cos(angleFlow * 2.2) * r * 2.4, sin(angleFlow * 2.2) * r * 2.4);
+      float n2 = snoise(noiseCoord2 + vec2(uTime * 0.25, 0.0)) * 0.5 + 0.5;
 
-      float plasmaNoise = n1 * 0.65 + n2 * 0.35;
+      float plasmaNoise = n1 * 0.6 + n2 * 0.4;
 
       // Relativistic Doppler Beaming Effect:
       // Approaching side of the accretion disk is bluer and brighter
       vec3 camDir = normalize(uCameraPosition - vWorldPosition);
-      vec3 tangent = normalize(vec3(-vLocalPosition.y, vLocalPosition.x, 0.0));
-      vec3 worldTangent = normalize((modelMatrix * vec4(tangent, 0.0)).xyz);
-      float dopplerFactor = dot(worldTangent, camDir);
-      float dopplerBoost = clamp(1.0 + dopplerFactor * 0.4, 0.6, 1.4);
+      float dopplerFactor = dot(normalize(vWorldTangent), camDir);
+      float dopplerBoost = clamp(1.0 + dopplerFactor * 0.45, 0.65, 1.45);
 
-      // Radial density profile
-      // Sharp inner edge near photon sphere, peak luminance at rNorm ~0.15, smooth exponential outer fade
-      float innerCutoff = smoothstep(0.0, 0.08, rNorm);
-      float peakBrightness = exp(-rNorm * 3.8);
-      float outerFade = smoothstep(1.0, 0.6, rNorm);
-      float density = innerCutoff * peakBrightness * outerFade;
+      // Radial density profile matching reference image:
+      // Sharp inner cutoff at event horizon, luminous peak at rNorm ~0.15, smooth exponential fade
+      float innerCutoff = smoothstep(0.0, 0.06, rNorm);
+      float diskProfile = exp(-pow((rNorm - 0.12) * 2.6, 2.0));
+      float outerFade = smoothstep(1.0, 0.65, rNorm);
+      float density = innerCutoff * diskProfile * outerFade;
 
-      // Color mapping
-      vec3 color = mix(uColorMid, uColorCore, pow(1.0 - rNorm, 3.5));
-      color = mix(uColorOuter, color, pow(1.0 - rNorm, 1.2));
-      color = mix(uColorDark, color, innerCutoff);
+      // Color mapping: inner blinding white -> electric cyan -> deep royal blue
+      vec3 color = mix(uColorMid, uColorCore, pow(1.0 - rNorm, 2.8));
+      color = mix(uColorOuter, color, pow(1.0 - rNorm, 1.1));
 
-      // Add plasma filaments
-      color += uColorMid * pow(plasmaNoise, 2.0) * 0.8 * (1.0 - rNorm * 0.7);
+      // Add dynamic plasma turbulence
+      color += uColorMid * pow(plasmaNoise, 1.8) * 0.5 * (1.0 - rNorm * 0.6);
 
-      float alpha = density * (0.6 + plasmaNoise * 0.5) * dopplerBoost;
-      vec3 finalColor = color * uIntensity * dopplerBoost;
+      float alpha = clamp(density * (0.7 + plasmaNoise * 0.4) * dopplerBoost, 0.0, 1.0);
+      vec3 finalColor = color * (uIntensity * density) * dopplerBoost;
 
       gl_FragColor = vec4(finalColor, alpha);
     }

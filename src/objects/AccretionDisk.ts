@@ -11,7 +11,7 @@ export class AccretionDisk extends THREE.Group {
     // High-resolution ring geometry
     // Inner radius 1.85 (just outside event horizon 1.65), outer radius 7.2
     const innerRadius = 1.85;
-    const outerRadius = 7.2;
+    const outerRadius = 6.8;
     const geometry = new THREE.RingGeometry(innerRadius, outerRadius, 128, 64);
 
     this.shaderMaterial = new THREE.ShaderMaterial({

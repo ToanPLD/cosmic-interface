@@ -15,25 +15,24 @@ export class PostProcessingManager {
     scene: THREE.Scene,
     camera: THREE.PerspectiveCamera
   ) {
-    // 1. Initialize EffectComposer directly with renderer
     this.composer = new EffectComposer(renderer);
     this.composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.composer.setSize(window.innerWidth, window.innerHeight);
 
-    // 2. Base scene render pass
+    // 1. Render scene
     this.renderPass = new RenderPass(scene, camera);
     this.composer.addPass(this.renderPass);
 
-    // 3. UnrealBloomPass: controlled cinematic glow without overblowing
+    // 2. Controlled subtle bloom: only high-luminance elements (>0.72) bloom softly
     const res = new THREE.Vector2(window.innerWidth, window.innerHeight);
-    const bloomStrength = 0.95;
-    const bloomRadius = 0.4;
-    const bloomThreshold = 0.28;
+    const bloomStrength = 0.45;
+    const bloomRadius = 0.25;
+    const bloomThreshold = 0.72;
 
     this.bloomPass = new UnrealBloomPass(res, bloomStrength, bloomRadius, bloomThreshold);
     this.composer.addPass(this.bloomPass);
 
-    // 4. OutputPass: official ACESFilmic tone mapping and sRGB conversion
+    // 3. Color grading & ACES Filmic Tone Mapping
     this.outputPass = new OutputPass();
     this.composer.addPass(this.outputPass);
   }

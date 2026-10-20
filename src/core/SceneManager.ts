@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CameraController } from './CameraController';
+import { BlackHole } from '../objects/BlackHole';
 
 export class SceneManager {
   public container: HTMLElement;
@@ -8,6 +9,7 @@ export class SceneManager {
   public renderer: THREE.WebGLRenderer;
   public cameraController: CameraController;
   public clock: THREE.Clock;
+  public blackHole: BlackHole;
 
   private isRunning: boolean = false;
   private resizeObserver: ResizeObserver | null = null;
@@ -50,6 +52,13 @@ export class SceneManager {
 
     // 5. Clock
     this.clock = new THREE.Clock();
+
+    // 6. Black Hole Singularity Core
+    this.blackHole = new BlackHole();
+    this.scene.add(this.blackHole);
+    this.registerUpdate((elapsedTime) => {
+      this.blackHole.update(elapsedTime);
+    });
 
     this.setupEvents();
   }

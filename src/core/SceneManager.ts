@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { CameraController } from './CameraController';
 import { BlackHole } from '../objects/BlackHole';
+import { AccretionDisk } from '../objects/AccretionDisk';
+import { CosmicPlume } from '../objects/CosmicPlume';
 
 export class SceneManager {
   public container: HTMLElement;
@@ -10,6 +12,8 @@ export class SceneManager {
   public cameraController: CameraController;
   public clock: THREE.Clock;
   public blackHole: BlackHole;
+  public accretionDisk: AccretionDisk;
+  public cosmicPlume: CosmicPlume;
 
   private isRunning: boolean = false;
   private resizeObserver: ResizeObserver | null = null;
@@ -56,8 +60,19 @@ export class SceneManager {
     // 6. Black Hole Singularity Core
     this.blackHole = new BlackHole();
     this.scene.add(this.blackHole);
+
+    // 7. Accretion Disk (tilted plasma ring)
+    this.accretionDisk = new AccretionDisk();
+    this.scene.add(this.accretionDisk);
+
+    // 8. Cosmic Gas Plume (inflow from deep space)
+    this.cosmicPlume = new CosmicPlume();
+    this.scene.add(this.cosmicPlume);
+
     this.registerUpdate((elapsedTime) => {
       this.blackHole.update(elapsedTime);
+      this.accretionDisk.update(elapsedTime, this.camera.position);
+      this.cosmicPlume.update(elapsedTime);
     });
 
     this.setupEvents();

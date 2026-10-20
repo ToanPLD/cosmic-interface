@@ -17,7 +17,7 @@ export class BlackHole extends THREE.Group {
       depthWrite: true
     });
     this.eventHorizon = new THREE.Mesh(horizonGeo, horizonMat);
-    this.eventHorizon.renderOrder = 50;
+    this.eventHorizon.renderOrder = 1;
     this.add(this.eventHorizon);
 
     // 2. Photon Sphere / Einstein Gravitational Lensing Rim
@@ -32,7 +32,7 @@ export class BlackHole extends THREE.Group {
       depthWrite: false
     });
     this.photonSphere = new THREE.Mesh(lensingGeo, this.lensingMaterial);
-    this.photonSphere.renderOrder = 55;
+    this.photonSphere.renderOrder = 12;
     this.add(this.photonSphere);
   }
 

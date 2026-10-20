@@ -6,9 +6,9 @@ console.log('--- Verifying 12-Second Seamless Mathematical Loop ---');
 // 1. Camera Controller Verification
 const camera = new THREE.PerspectiveCamera(45, 16 / 9, 0.1, 1000);
 const controller = new CameraController(camera, {
-  radius: 24.0,
-  height: 5.0,
-  heightAmplitude: 1.8,
+  radius: 32.0,
+  height: 8.0,
+  heightAmplitude: 2.5,
   loopPeriod: 12.0
 });
 
@@ -29,19 +29,18 @@ if (camDist > 1e-4) {
   console.log('PASS: Camera loops seamlessly across 12s period.');
 }
 
-// 2. Orbital harmonic speeds verification
-const orbitSpeeds = [
-  (Math.PI * 2 / 12.0) * 2, // Orbit 1
-  (Math.PI * 2 / 12.0) * 1, // Orbit 2
-  (Math.PI * 2 / 12.0) * 1  // Orbit 3
-];
+// 2. Orbital harmonic speeds verification for all 5 spherical orbits
+const orbitMultipliers = [2, 1, 2, 1, 1]; // Orbits 1 through 5
+const orbitSpeeds = orbitMultipliers.map((m) => ((Math.PI * 2) / 12.0) * m);
 
 orbitSpeeds.forEach((speed, idx) => {
   const angleAt0 = 0.0;
   const angleAt12 = speed * 12.0;
   const revolutions = angleAt12 / (Math.PI * 2);
   const isInteger = Math.abs(revolutions - Math.round(revolutions)) < 1e-6;
-  console.log(`Orbit ${idx + 1}: ${revolutions} full revolutions in 12s -> is integer multiple: ${isInteger}`);
+  console.log(
+    `Orbit ${idx + 1}: ${revolutions} full revolutions in 12s -> is integer multiple: ${isInteger}`
+  );
   if (!isInteger) {
     console.error(`FAIL: Orbit ${idx + 1} speed is not harmonic!`);
     process.exit(1);

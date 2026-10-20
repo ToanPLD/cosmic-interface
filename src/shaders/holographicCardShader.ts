@@ -4,11 +4,12 @@ export const HolographicCardShader = {
   uniforms: {
     uTexture: { value: null as THREE.Texture | null },
     uTime: { value: 0 },
+    uForegroundFactor: { value: 1.0 }, // 1.0 when in front of core, 0.0 when behind
     uBorderColor: { value: new THREE.Color(0x00f5ff) },
     uGlowColor: { value: new THREE.Color(0x1d4ed8) },
-    uGlassOpacity: { value: 0.88 },
-    uFresnelPower: { value: 2.2 },
-    uEmissionMultiplier: { value: 1.1 }
+    uGlassOpacity: { value: 0.90 },
+    uFresnelPower: { value: 2.4 },
+    uEmissionMultiplier: { value: 1.2 }
   },
 
   vertexShader: `
@@ -31,6 +32,7 @@ export const HolographicCardShader = {
   fragmentShader: `
     uniform sampler2D uTexture;
     uniform float uTime;
+    uniform float uForegroundFactor;
     uniform vec3 uBorderColor;
     uniform vec3 uGlowColor;
     uniform float uGlassOpacity;
@@ -53,31 +55,44 @@ export const HolographicCardShader = {
       // Sample procedural cosmic image
       vec4 texColor = texture2D(uTexture, vUv);
 
-      // High-tech holographic scanline effect
-      float scanline = sin(vUv.y * 120.0 + uTime * 4.0) * 0.04 + 0.96;
+      // High-tech holographic scanline effect (sharper in foreground, subtler in background)
+      float scanlineSpeed = 3.5;
+      float scanlineDensity = 140.0;
+      float scanline = sin(vUv.y * scanlineDensity + uTime * scanlineSpeed) * 0.05 + 0.95;
 
       // Holographic sci-fi border framing & corner brackets
       vec2 borderDist = min(vUv, 1.0 - vUv);
       float minEdge = min(borderDist.x, borderDist.y);
-      float borderMask = 1.0 - smoothstep(0.005, 0.02, minEdge);
+      float borderMask = 1.0 - smoothstep(0.006, 0.024, minEdge);
 
       // Corner bracket accents
-      float cornerSize = 0.12;
+      float cornerSize = 0.14;
       float inCornerX = step(borderDist.x, cornerSize);
       float inCornerY = step(borderDist.y, cornerSize);
-      float cornerBracket = inCornerX * inCornerY * (1.0 - smoothstep(0.015, 0.035, minEdge));
+      float cornerBracket = inCornerX * inCornerY * (1.0 - smoothstep(0.012, 0.038, minEdge));
 
       // Compose holographic glass color
       vec3 baseImg = texColor.rgb * scanline;
-      vec3 edgeGlow = uBorderColor * (borderMask * 1.5 + cornerBracket * 2.5);
-      vec3 rimGlow = uGlowColor * fresnel * 1.4;
 
-      vec3 finalRgb = baseImg + edgeGlow + rimGlow;
-      finalRgb *= uEmissionMultiplier;
+      // Energy Field Obscuration:
+      // When cards pass behind the central core (uForegroundFactor -> 0.0),
+      // their light is shifted towards deep cosmic cyan-blue and partially diffused.
+      vec3 energyVeilColor = vec3(0.04, 0.22, 0.55);
+      baseImg = mix(energyVeilColor * (baseImg.r * 0.5 + 0.5), baseImg, 0.35 + 0.65 * uForegroundFactor);
 
-      float alpha = clamp(texColor.a * uGlassOpacity + borderMask + fresnel * 0.5, 0.15, 0.98);
+      // Border and rim glows
+      float edgeMultiplier = mix(0.5, 1.8, uForegroundFactor);
+      vec3 edgeGlow = uBorderColor * (borderMask * 1.6 + cornerBracket * 2.8) * edgeMultiplier;
+      vec3 rimGlow = uGlowColor * fresnel * (1.2 + 0.6 * uForegroundFactor);
 
-      gl_FragColor = vec4(finalRgb, alpha);
+      vec3 finalRgb = (baseImg + edgeGlow + rimGlow) * uEmissionMultiplier;
+
+      // Dynamic opacity: foreground cards are crisp and solid (up to 0.95);
+      // background cards become semi-translucent and veiled (0.35 - 0.65)
+      float baseAlpha = clamp(texColor.a * uGlassOpacity + borderMask + fresnel * 0.45, 0.2, 0.98);
+      float finalAlpha = baseAlpha * (0.40 + 0.60 * uForegroundFactor);
+
+      gl_FragColor = vec4(finalRgb, finalAlpha);
     }
   `
 };

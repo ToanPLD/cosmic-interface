@@ -24,10 +24,10 @@ export class HolographicCard extends THREE.Group {
     this.orbitSpeed = orbitSpeed;
     this.initialPhase = initialPhase;
     this.verticalOffset = verticalOffset;
-    this.verticalAmplitude = 0.35;
-    this.bobbingFrequency = (Math.PI * 2) / 12.0 * 2.0; // 2 oscillations per 12s loop
+    this.verticalAmplitude = 0.4;
+    this.bobbingFrequency = ((Math.PI * 2) / 12.0) * 2.0; // 2 oscillations per 12s loop
 
-    // Card dimensions (aspect ratio ~1.6 : 1)
+    // Cinematic rectangular card dimensions (aspect ratio ~1.6 : 1)
     const cardWidth = 2.4;
     const cardHeight = 1.5;
     const geometry = new THREE.PlaneGeometry(cardWidth, cardHeight, 16, 16);
@@ -39,13 +39,14 @@ export class HolographicCard extends THREE.Group {
       transparent: true,
       side: THREE.DoubleSide,
       blending: THREE.AdditiveBlending,
+      depthTest: true,
       depthWrite: false
     });
 
     this.shaderMaterial.uniforms.uTexture.value = texture;
 
     this.mesh = new THREE.Mesh(geometry, this.shaderMaterial);
-    this.mesh.renderOrder = 10;
+    this.mesh.renderOrder = 20;
     this.add(this.mesh);
   }
 
@@ -58,55 +59,61 @@ export class HolographicCard extends THREE.Group {
       this.shaderMaterial.uniforms.uTime.value = elapsedTime;
     }
 
-    // 1. Calculate orbital angle (Clockwise movement)
-    // angle = initialPhase - orbitSpeed * elapsedTime
+    // 1. Calculate orbital angle (Clockwise orbital movement around core)
     const angle = this.initialPhase - this.orbitSpeed * elapsedTime;
 
-    // 2. Uninclined position on circle
+    // 2. Uninclined circular trajectory with subtle harmonic vertical floating
     const rawX = Math.cos(angle) * this.baseOrbitRadius;
     const rawZ = Math.sin(angle) * this.baseOrbitRadius;
-    // Harmonic vertical floating bobbing
-    const rawY = this.verticalOffset + Math.sin(this.initialPhase + elapsedTime * this.bobbingFrequency) * this.verticalAmplitude;
+    const rawY =
+      this.verticalOffset +
+      Math.sin(this.initialPhase + elapsedTime * this.bobbingFrequency) * this.verticalAmplitude;
 
     const localPos = new THREE.Vector3(rawX, rawY, rawZ);
 
-    // 3. Apply orbit inclination plane transform
+    // 3. Apply the 3D orbital plane inclination matrix
     localPos.applyMatrix4(orbitInclinationMatrix);
     this.position.copy(localPos);
 
-    // 4. Calculate orbital tangent (motion direction)
-    const tangent = new THREE.Vector3(Math.sin(angle), 0, -Math.cos(angle)).applyMatrix4(orbitInclinationMatrix).normalize();
-
-    // 5. Calculate card orientation
-    // Vector from card to camera
-    const toCamera = new THREE.Vector3().subVectors(cameraPosition, this.position).normalize();
-
-    // Foreground factor: how close is the card compared to the core?
-    // Camera is looking at (0,0,0). Cards between camera and core are in the foreground.
-    const camToCenter = new THREE.Vector3().subVectors(new THREE.Vector3(0, 0, 0), cameraPosition).normalize();
-    const camToCard = new THREE.Vector3().subVectors(this.position, cameraPosition).normalize();
-    const foregroundDot = camToCard.dot(camToCenter); // higher value (near 1.0) means closer to central sightline
-
-    // Distance to camera vs distance from center to camera
-    const distToCam = this.position.distanceTo(cameraPosition);
+    // 4. Calculate camera-relative distance & sightline projection
+    // Optical axis from camera to central singularity at (0, 0, 0)
     const centerDistToCam = cameraPosition.length();
-    const isForeground = distToCam < centerDistToCam;
+    const camToCenterDir = new THREE.Vector3(0, 0, 0).sub(cameraPosition).normalize();
+    const camToCardVec = new THREE.Vector3().subVectors(this.position, cameraPosition);
+    const sightlineProjection = camToCardVec.dot(camToCenterDir);
 
-    // Target normal:
-    // If in foreground, card normal rotates to face the camera smoothly.
-    // If behind the core (background), card normal aligns with the orbital outward normal or tangent.
-    let faceWeight = 0.0;
-    if (isForeground) {
-      // Strong camera facing when in front
-      faceWeight = Math.min(1.0, Math.max(0.0, (centerDistToCam - distToCam) / 6.0));
-      faceWeight = Math.pow(faceWeight, 0.7); // smooth easing
+    // diff: positive when the card is in foreground (in front of core), negative when behind
+    const diff = centerDistToCam - sightlineProjection;
+
+    // Smooth foreground factor [0.0 = deep background, 1.0 = direct foreground]
+    const foregroundFactor = THREE.MathUtils.clamp((diff + 5.0) / 12.0, 0.0, 1.0);
+    const easedFactor = THREE.MathUtils.smoothstep(foregroundFactor, 0.1, 0.9);
+
+    if (this.shaderMaterial.uniforms.uForegroundFactor) {
+      this.shaderMaterial.uniforms.uForegroundFactor.value = easedFactor;
     }
 
-    // Normal when following circular orbit (facing outwards from center)
-    const orbitalNormal = this.position.clone().normalize();
-    const targetNormal = new THREE.Vector3().lerpVectors(orbitalNormal, toCamera, faceWeight * 0.85 + 0.15).normalize();
+    // 5. Dynamic Render Order for Realistic Occlusion & Energy Veiling:
+    // When behind the core, render before the accretion disk (renderOrder = 2)
+    // so the black hole event horizon occludes it, and the glowing accretion disk overlays it.
+    // When in the foreground, render above the accretion disk (renderOrder = 20).
+    if (diff > 0.0) {
+      this.mesh.renderOrder = 20;
+    } else {
+      this.mesh.renderOrder = 2;
+    }
 
-    // Look at target
+    // 6. Camera-Facing Alignment:
+    // Panels gently rotate to face the camera as they pass through the front,
+    // then gradually turn away towards the orbital tangent as they move behind the core.
+    const toCamera = new THREE.Vector3().subVectors(cameraPosition, this.position).normalize();
+    const orbitalNormal = this.position.clone().normalize();
+
+    // Lerp from outward orbital normal to direct camera-facing vector
+    const targetNormal = new THREE.Vector3()
+      .lerpVectors(orbitalNormal, toCamera, easedFactor * 0.88 + 0.12)
+      .normalize();
+
     const lookTarget = this.position.clone().add(targetNormal);
     this.lookAt(lookTarget);
   }

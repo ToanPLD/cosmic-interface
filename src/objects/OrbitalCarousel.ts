@@ -5,8 +5,9 @@ import { createProceduralCosmicTexture } from '../utils/cosmicTextureGenerator';
 interface OrbitConfig {
   radius: number;
   speedMultiplier: number; // integer harmonic of 2pi / 12
-  inclinationX: number;
-  inclinationZ: number;
+  inclinationX: number; // pitch tilt
+  inclinationY: number; // yaw rotation
+  inclinationZ: number; // roll tilt
   cardCount: number;
   yOffset: number;
   ringColor: number;
@@ -21,39 +22,63 @@ export class OrbitalCarousel extends THREE.Group {
   constructor() {
     super();
 
-    // Generate 6 distinct procedural cosmic textures
+    // Generate distinct procedural cosmic textures
     for (let i = 0; i < 6; i++) {
       this.textures.push(createProceduralCosmicTexture(i));
     }
 
-    // Define 3 realistic tilted 3D orbital trajectories
+    // 5 Distinct 3D orbital trajectories at steep, varied angles
+    // creating a true spherical celestial formation (miniature solar system)
     const orbitConfigs: OrbitConfig[] = [
       {
-        radius: 8.5,
+        radius: 7.8,
         speedMultiplier: 2, // 2 full revolutions per 12s
-        inclinationX: 0.18, // ~10 deg tilt
+        inclinationX: 0.28, // ~16 deg
+        inclinationY: 0.15,
         inclinationZ: 0.12,
         cardCount: 4,
-        yOffset: 0.2,
-        ringColor: 0x00f0ff
+        yOffset: 0.15,
+        ringColor: 0x00f5ff // Electric Cyan
       },
       {
-        radius: 11.5,
+        radius: 9.8,
         speedMultiplier: 1, // 1 full revolution per 12s
-        inclinationX: -0.24, // ~-14 deg tilt
-        inclinationZ: -0.15,
-        cardCount: 5,
-        yOffset: -0.4,
-        ringColor: 0x38bdf8
+        inclinationX: -0.62, // ~-35 deg
+        inclinationY: -0.38,
+        inclinationZ: 0.28,
+        cardCount: 4,
+        yOffset: -0.25,
+        ringColor: 0x38bdf8 // Sky Cyan-Blue
       },
       {
-        radius: 14.5,
+        radius: 11.8,
+        speedMultiplier: 2, // 2 full revolutions per 12s
+        inclinationX: 0.94, // ~54 deg
+        inclinationY: 0.55,
+        inclinationZ: -0.38,
+        cardCount: 4,
+        yOffset: 0.35,
+        ringColor: 0x2563eb // Royal Neon Cobalt
+      },
+      {
+        radius: 13.8,
         speedMultiplier: 1, // 1 full revolution per 12s
-        inclinationX: 0.14, // ~8 deg tilt
-        inclinationZ: -0.22,
-        cardCount: 5,
-        yOffset: 0.5,
-        ringColor: 0x1d4ed8
+        inclinationX: -1.12, // ~-64 deg
+        inclinationY: 0.72,
+        inclinationZ: -0.25,
+        cardCount: 4,
+        yOffset: -0.20,
+        ringColor: 0x06b6d4 // Aqua Cyan
+      },
+      {
+        radius: 15.8,
+        speedMultiplier: 1, // 1 full revolution per 12s
+        inclinationX: 0.52, // ~30 deg
+        inclinationY: -1.18, // ~-68 deg
+        inclinationZ: 0.72,
+        cardCount: 4,
+        yOffset: 0.30,
+        ringColor: 0x6366f1 // Celestial Indigo
       }
     ];
 
@@ -62,21 +87,20 @@ export class OrbitalCarousel extends THREE.Group {
     orbitConfigs.forEach((config) => {
       // 1. Create inclination matrix
       const matrix = new THREE.Matrix4();
-      const euler = new THREE.Euler(config.inclinationX, 0, config.inclinationZ, 'XYZ');
+      const euler = new THREE.Euler(config.inclinationX, config.inclinationY, config.inclinationZ, 'XYZ');
       matrix.makeRotationFromEuler(euler);
       this.orbitMatrices.push(matrix);
 
-      // 2. Create glowing circular orbital track line
+      // 2. Create glowing 3D circular orbital track
       const trackGroup = new THREE.Group();
       trackGroup.rotation.copy(euler);
 
-      // Main glowing orbital ring
-      const ringGeo = new THREE.RingGeometry(config.radius - 0.035, config.radius + 0.035, 128);
+      // 3D Torus orbital track (remains visible and smooth from all 360-degree viewing angles)
+      const ringGeo = new THREE.TorusGeometry(config.radius, 0.026, 8, 128);
       const ringMat = new THREE.MeshBasicMaterial({
         color: config.ringColor,
-        side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.28,
+        opacity: 0.35,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       });
@@ -84,13 +108,12 @@ export class OrbitalCarousel extends THREE.Group {
       ringMesh.rotation.x = Math.PI / 2;
       trackGroup.add(ringMesh);
 
-      // Secondary outer faint halo ring
-      const haloGeo = new THREE.RingGeometry(config.radius - 0.2, config.radius + 0.2, 96);
+      // Secondary soft glowing outer aura torus
+      const haloGeo = new THREE.TorusGeometry(config.radius, 0.12, 6, 96);
       const haloMat = new THREE.MeshBasicMaterial({
         color: config.ringColor,
-        side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.06,
+        opacity: 0.08,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       });

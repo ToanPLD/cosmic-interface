@@ -45,8 +45,8 @@ export class SceneManager {
       stencil: false,
       depth: true
     });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.container.appendChild(this.renderer.domElement);
@@ -107,8 +107,10 @@ export class SceneManager {
   public onResize(): void {
     const width = window.innerWidth;
     const height = window.innerHeight;
+    const pr = Math.min(window.devicePixelRatio || 1, 2);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    this.renderer.setPixelRatio(pr);
     this.renderer.setSize(width, height);
     this.postProcessing.setSize(width, height);
   }

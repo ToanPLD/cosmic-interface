@@ -25,7 +25,7 @@ export class AccretionDisk extends THREE.Group {
     });
 
     this.mesh = new THREE.Mesh(geometry, this.shaderMaterial);
-    this.mesh.renderOrder = 3;
+    this.mesh.renderOrder = 8;
     this.add(this.mesh);
 
     // Apply 3D cinematic tilt matching reference image

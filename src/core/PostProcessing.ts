@@ -15,8 +15,10 @@ export class PostProcessingManager {
     scene: THREE.Scene,
     camera: THREE.PerspectiveCamera
   ) {
+    const pr = Math.min(window.devicePixelRatio || 1, 2);
+
     this.composer = new EffectComposer(renderer);
-    this.composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.composer.setPixelRatio(pr);
     this.composer.setSize(window.innerWidth, window.innerHeight);
 
     // 1. Render scene
@@ -24,12 +26,20 @@ export class PostProcessingManager {
     this.composer.addPass(this.renderPass);
 
     // 2. Controlled subtle bloom: only high-luminance elements (>0.72) bloom softly
-    const res = new THREE.Vector2(window.innerWidth, window.innerHeight);
+    const effectiveRes = new THREE.Vector2(
+      window.innerWidth * pr,
+      window.innerHeight * pr
+    );
     const bloomStrength = 0.45;
     const bloomRadius = 0.25;
     const bloomThreshold = 0.72;
 
-    this.bloomPass = new UnrealBloomPass(res, bloomStrength, bloomRadius, bloomThreshold);
+    this.bloomPass = new UnrealBloomPass(
+      effectiveRes,
+      bloomStrength,
+      bloomRadius,
+      bloomThreshold
+    );
     this.composer.addPass(this.bloomPass);
 
     // 3. Color grading & ACES Filmic Tone Mapping
@@ -38,9 +48,11 @@ export class PostProcessingManager {
   }
 
   public setSize(width: number, height: number): void {
-    this.composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const pr = Math.min(window.devicePixelRatio || 1, 2);
+    this.composer.setPixelRatio(pr);
+    // composer.setSize automatically computes effectiveWidth (width * pr)
+    // and correctly invokes setSize(effectiveWidth, effectiveHeight) on all passes
     this.composer.setSize(width, height);
-    this.bloomPass.resolution.set(width, height);
   }
 
   public render(): void {

@@ -39,7 +39,7 @@ export class CosmicPlume extends THREE.Group {
     });
 
     this.mesh = new THREE.Mesh(geometry, this.shaderMaterial);
-    this.mesh.renderOrder = 4;
+    this.mesh.renderOrder = 7;
     this.add(this.mesh);
 
     // Subtle outer glow sheath
@@ -48,7 +48,7 @@ export class CosmicPlume extends THREE.Group {
     const outerMat = this.shaderMaterial.clone();
     outerMat.uniforms.uIntensity.value = 0.6;
     const outerMesh = new THREE.Mesh(outerGeo, outerMat);
-    outerMesh.renderOrder = 3;
+    outerMesh.renderOrder = 6;
     this.add(outerMesh);
   }
 

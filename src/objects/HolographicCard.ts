@@ -47,19 +47,6 @@ export class HolographicCard extends THREE.Group {
     this.mesh = new THREE.Mesh(geometry, this.shaderMaterial);
     this.mesh.renderOrder = 10;
     this.add(this.mesh);
-
-    // Subtle edge backer plane for depth
-    const borderGeo = new THREE.PlaneGeometry(cardWidth * 1.03, cardHeight * 1.03);
-    const borderMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.3,
-      blending: THREE.AdditiveBlending
-    });
-    const borderMesh = new THREE.Mesh(borderGeo, borderMat);
-    borderMesh.position.z = -0.01;
-    this.add(borderMesh);
   }
 
   public update(

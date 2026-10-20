@@ -10,7 +10,7 @@ export const AccretionDiskShader = {
     uColorOuter: { value: new THREE.Color(0x1e40af) },
     uColorDark: { value: new THREE.Color(0x020617) },
     uCameraPosition: { value: new THREE.Vector3() },
-    uIntensity: { value: 3.2 }
+    uIntensity: { value: 1.8 }
   },
 
   vertexShader: `
@@ -102,7 +102,7 @@ export const AccretionDiskShader = {
       vec3 tangent = normalize(vec3(-vLocalPosition.y, vLocalPosition.x, 0.0));
       vec3 worldTangent = normalize((modelMatrix * vec4(tangent, 0.0)).xyz);
       float dopplerFactor = dot(worldTangent, camDir);
-      float dopplerBoost = clamp(1.0 + dopplerFactor * 0.65, 0.4, 1.9);
+      float dopplerBoost = clamp(1.0 + dopplerFactor * 0.4, 0.6, 1.4);
 
       // Radial density profile
       // Sharp inner edge near photon sphere, peak luminance at rNorm ~0.15, smooth exponential outer fade

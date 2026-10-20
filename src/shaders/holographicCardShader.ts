@@ -8,7 +8,7 @@ export const HolographicCardShader = {
     uGlowColor: { value: new THREE.Color(0x1d4ed8) },
     uGlassOpacity: { value: 0.88 },
     uFresnelPower: { value: 2.2 },
-    uEmissionMultiplier: { value: 1.8 }
+    uEmissionMultiplier: { value: 1.1 }
   },
 
   vertexShader: `

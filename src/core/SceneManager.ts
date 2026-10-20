@@ -22,7 +22,6 @@ export class SceneManager {
   public cosmicEnvironment: CosmicEnvironment;
 
   private isRunning: boolean = false;
-  private resizeObserver: ResizeObserver | null = null;
   private updateCallbacks: Array<(elapsedTime: number, deltaTime: number) => void> = [];
 
   constructor(container: HTMLElement) {
@@ -31,14 +30,14 @@ export class SceneManager {
     // 1. Scene
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x010206);
-    this.scene.fog = new THREE.FogExp2(0x010206, 0.015);
+    this.scene.fog = new THREE.FogExp2(0x010206, 0.012);
 
-    // 2. Camera
+    // 2. Camera: Wide cinematic view of the entire cosmic system
     const aspect = window.innerWidth / window.innerHeight;
-    this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    this.camera.position.set(0, 5, 22);
+    this.camera = new THREE.PerspectiveCamera(42, aspect, 0.1, 1000);
+    this.camera.position.set(0, 8, 32);
 
-    // 3. Renderer
+    // 3. WebGLRenderer
     this.renderer = new THREE.WebGLRenderer({
       powerPreference: 'high-performance',
       antialias: true,
@@ -49,14 +48,14 @@ export class SceneManager {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.0;
     this.container.appendChild(this.renderer.domElement);
 
-    // 4. Camera Controller
+    // 4. Camera Controller (centered on black hole at (0, 0, 0))
     this.cameraController = new CameraController(this.camera, {
-      radius: 24.0,
-      height: 5.0,
-      heightAmplitude: 1.8,
+      radius: 32.0,
+      height: 8.0,
+      heightAmplitude: 2.5,
       loopPeriod: 12.0
     });
 
@@ -66,26 +65,27 @@ export class SceneManager {
     // 6. Clock
     this.clock = new THREE.Clock();
 
-    // 6. Black Hole Singularity Core
+    // 7. Black Hole Singularity Core
     this.blackHole = new BlackHole();
     this.scene.add(this.blackHole);
 
-    // 7. Accretion Disk (tilted plasma ring)
+    // 8. Accretion Disk (tilted plasma ring)
     this.accretionDisk = new AccretionDisk();
     this.scene.add(this.accretionDisk);
 
-    // 8. Cosmic Gas Plume (inflow from deep space)
+    // 9. Cosmic Gas Plume (inflow from deep space)
     this.cosmicPlume = new CosmicPlume();
     this.scene.add(this.cosmicPlume);
 
-    // 9. Orbital Carousel & Holographic Cards
+    // 10. Orbital Carousel & Holographic Cards
     this.orbitalCarousel = new OrbitalCarousel();
     this.scene.add(this.orbitalCarousel);
 
-    // 10. Cosmic Environment (Starfield, Nebula, Inward Dust)
+    // 11. Cosmic Environment (Starfield, Nebula, Inward Dust)
     this.cosmicEnvironment = new CosmicEnvironment();
     this.scene.add(this.cosmicEnvironment);
 
+    // Register update loops
     this.registerUpdate((elapsedTime) => {
       this.blackHole.update(elapsedTime);
       this.accretionDisk.update(elapsedTime, this.camera.position);
@@ -95,6 +95,9 @@ export class SceneManager {
     });
 
     this.setupEvents();
+
+    // Explicit initial resize to guarantee exact buffer alignment
+    this.onResize();
   }
 
   private setupEvents(): void {
@@ -135,7 +138,7 @@ export class SceneManager {
     // Update camera orbital motion
     this.cameraController.update(elapsedTime, deltaTime);
 
-    // Update components
+    // Update scene components
     for (const callback of this.updateCallbacks) {
       callback(elapsedTime, deltaTime);
     }

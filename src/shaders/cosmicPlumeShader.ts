@@ -6,7 +6,7 @@ export const CosmicPlumeShader = {
     uColorCore: { value: new THREE.Color(0xffffff) },
     uColorMid: { value: new THREE.Color(0x00e5ff) },
     uColorDeep: { value: new THREE.Color(0x1d4ed8) },
-    uIntensity: { value: 2.8 }
+    uIntensity: { value: 1.6 }
   },
 
   vertexShader: `

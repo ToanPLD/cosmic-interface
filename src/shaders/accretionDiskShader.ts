@@ -103,28 +103,34 @@ export const AccretionDiskShader = {
 
       float plasmaNoise = n1 * 0.6 + n2 * 0.4;
 
-      // Relativistic Doppler Beaming Effect:
+      // Relativistic Doppler Beaming Effect with safe normalization:
       // Approaching side of the accretion disk is bluer and brighter
-      vec3 camDir = normalize(uCameraPosition - vWorldPosition);
-      float dopplerFactor = dot(normalize(vWorldTangent), camDir);
+      vec3 toCam = uCameraPosition - vWorldPosition;
+      vec3 camDir = length(toCam) > 0.0001 ? normalize(toCam) : vec3(0.0, 1.0, 0.0);
+      vec3 worldTan = length(vWorldTangent) > 0.0001 ? normalize(vWorldTangent) : vec3(1.0, 0.0, 0.0);
+      float dopplerFactor = clamp(dot(worldTan, camDir), -1.0, 1.0);
       float dopplerBoost = clamp(1.0 + dopplerFactor * 0.45, 0.65, 1.45);
 
       // Radial density profile matching reference image:
       // Sharp inner cutoff at event horizon, luminous peak at rNorm ~0.15, smooth exponential fade
       float innerCutoff = smoothstep(0.0, 0.06, rNorm);
-      float diskProfile = exp(-pow((rNorm - 0.12) * 2.6, 2.0));
+      // Square difference directly to avoid pow(negative, 2.0) which yields NaN in GLSL ES
+      float diskOffset = (rNorm - 0.12) * 2.6;
+      float diskProfile = exp(-(diskOffset * diskOffset));
       float outerFade = smoothstep(1.0, 0.65, rNorm);
       float density = innerCutoff * diskProfile * outerFade;
 
       // Color mapping: inner blinding white -> electric cyan -> deep royal blue
-      vec3 color = mix(uColorMid, uColorCore, pow(1.0 - rNorm, 2.8));
-      color = mix(uColorOuter, color, pow(1.0 - rNorm, 1.1));
+      float invRNorm = clamp(1.0 - rNorm, 0.0, 1.0);
+      vec3 color = mix(uColorMid, uColorCore, pow(invRNorm, 2.8));
+      color = mix(uColorOuter, color, pow(invRNorm, 1.1));
 
-      // Add dynamic plasma turbulence
-      color += uColorMid * pow(plasmaNoise, 1.8) * 0.5 * (1.0 - rNorm * 0.6);
+      // Add dynamic plasma turbulence with clamped non-negative base
+      float safePlasmaNoise = clamp(plasmaNoise, 0.0, 1.0);
+      color += uColorMid * pow(safePlasmaNoise, 1.8) * 0.5 * (1.0 - rNorm * 0.6);
 
-      float alpha = clamp(density * (0.7 + plasmaNoise * 0.4) * dopplerBoost, 0.0, 1.0);
-      vec3 finalColor = color * (uIntensity * density) * dopplerBoost;
+      float alpha = clamp(density * (0.7 + safePlasmaNoise * 0.4) * dopplerBoost, 0.0, 1.0);
+      vec3 finalColor = clamp(color * (uIntensity * density) * dopplerBoost, 0.0, 60.0);
 
       gl_FragColor = vec4(finalColor, alpha);
     }

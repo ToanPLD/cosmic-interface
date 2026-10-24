@@ -3,3 +3,7 @@ dist
 .superpowers
 .DS_Store
 *.local
+.vite
+videos
+video_frame_*.png
+output

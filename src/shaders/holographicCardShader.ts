@@ -45,12 +45,14 @@ export const HolographicCardShader = {
     varying vec3 vWorldPosition;
 
     void main() {
-      vec3 normal = normalize(vNormal);
-      vec3 viewDir = normalize(vViewPosition);
+      // Safe normalizations
+      vec3 normal = length(vNormal) > 0.0001 ? normalize(vNormal) : vec3(0.0, 0.0, 1.0);
+      vec3 viewDir = length(vViewPosition) > 0.0001 ? normalize(vViewPosition) : vec3(0.0, 0.0, 1.0);
 
-      // Fresnel rim glow
-      float NdotV = abs(dot(normal, viewDir));
-      float fresnel = pow(1.0 - NdotV, uFresnelPower);
+      // Safe Fresnel rim glow
+      float NdotV = clamp(abs(dot(normal, viewDir)), 0.0, 1.0);
+      float fresnel = pow(clamp(1.0 - NdotV, 0.0, 1.0), uFresnelPower);
+      float safeFresnel = clamp(fresnel, 0.0, 1.0);
 
       // Sample procedural cosmic image
       vec4 texColor = texture2D(uTexture, vUv);
@@ -83,14 +85,15 @@ export const HolographicCardShader = {
       // Border and rim glows
       float edgeMultiplier = mix(0.5, 1.8, uForegroundFactor);
       vec3 edgeGlow = uBorderColor * (borderMask * 1.6 + cornerBracket * 2.8) * edgeMultiplier;
-      vec3 rimGlow = uGlowColor * fresnel * (1.2 + 0.6 * uForegroundFactor);
+      vec3 rimGlow = uGlowColor * safeFresnel * (1.2 + 0.6 * uForegroundFactor);
 
-      vec3 finalRgb = (baseImg + edgeGlow + rimGlow) * uEmissionMultiplier;
+      // Bounded HDR emissive composition to prevent bloom pyramid NaN or runaway values
+      vec3 finalRgb = clamp((baseImg + edgeGlow + rimGlow) * uEmissionMultiplier, 0.0, 60.0);
 
       // Dynamic opacity: foreground cards are crisp and solid (up to 0.95);
       // background cards become semi-translucent and veiled (0.35 - 0.65)
-      float baseAlpha = clamp(texColor.a * uGlassOpacity + borderMask + fresnel * 0.45, 0.2, 0.98);
-      float finalAlpha = baseAlpha * (0.40 + 0.60 * uForegroundFactor);
+      float baseAlpha = clamp(texColor.a * uGlassOpacity + borderMask + safeFresnel * 0.45, 0.2, 0.98);
+      float finalAlpha = clamp(baseAlpha * (0.40 + 0.60 * uForegroundFactor), 0.0, 1.0);
 
       gl_FragColor = vec4(finalRgb, finalAlpha);
     }

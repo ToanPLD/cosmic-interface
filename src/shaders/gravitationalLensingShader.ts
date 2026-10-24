@@ -38,23 +38,25 @@ export const GravitationalLensingShader = {
     varying vec3 vWorldPosition;
 
     void main() {
-      vec3 normal = normalize(vNormal);
-      vec3 viewDir = normalize(vViewPosition);
+      // Safe vector normalizations
+      vec3 normal = length(vNormal) > 0.0001 ? normalize(vNormal) : vec3(0.0, 0.0, 1.0);
+      vec3 viewDir = length(vViewPosition) > 0.0001 ? normalize(vViewPosition) : vec3(0.0, 0.0, 1.0);
 
       // Sharp Fresnel rim: ONLY the perimeter tangent ring radiates light (Einstein ring)
       // When facing directly (center), fresnel is strictly 0.0 -> center remains pure pitch black!
-      float NdotV = abs(dot(normal, viewDir));
-      float fresnel = pow(1.0 - NdotV, uFresnelPower);
+      float NdotV = clamp(abs(dot(normal, viewDir)), 0.0, 1.0);
+      float fresnel = pow(clamp(1.0 - NdotV, 0.0, 1.0), uFresnelPower);
+      float safeFresnel = clamp(fresnel, 0.0, 1.0);
 
       // Subtle dynamic gravitational ripple (harmonic 12s loop)
       float wave = sin(uTime * (6.28318530718 / 12.0) * 2.0 + vWorldPosition.y * 3.0) * 0.05 + 0.95;
 
       // Color gradient from white tangent rim to electric cyan
-      vec3 color = mix(uColorOuter, uColorInner, pow(fresnel, 2.0));
+      vec3 color = mix(uColorOuter, uColorInner, pow(safeFresnel, 2.0));
 
-      // Strictly zero in center, bright on rim
-      vec3 finalColor = color * (uIntensity * pow(fresnel, 2.5) * wave);
-      float alpha = clamp(pow(fresnel, 3.0) * uIntensity, 0.0, 1.0);
+      // Strictly zero in center, bright on rim with HDR bounded output
+      vec3 finalColor = clamp(color * (uIntensity * pow(safeFresnel, 2.5) * wave), 0.0, 60.0);
+      float alpha = clamp(pow(safeFresnel, 3.0) * uIntensity, 0.0, 1.0);
 
       gl_FragColor = vec4(finalColor, alpha);
     }

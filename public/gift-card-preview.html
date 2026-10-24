@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thiệp Quà Tặng 20/10 - Mã QR Hoa Hồng Nghệ Thuật</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Great+Vibes&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <script src="/qrcode.bundle.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0a0a0d;
+      --gold-1: #d4af37;
+      --gold-2: #f7d070;
+      --rose-pink: #ff4d79;
+      --rose-red: #c92a42;
+      --deep-wine: #5a0c1b;
+      --text-dark: #1f1f23;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg-dark);
+      color: #e5e5eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top navigation / Control header */
+    .top-controls {
+      background: rgba(18, 19, 26, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 100;
+      position: sticky;
+      top: 0;
+    }
+
+    .controls-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 30px;
+    }
+
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gold-2);
+      letter-spacing: 0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: #9a9ab0;
+    }
+
+    .controls-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #c92a42, #8b1328);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(201, 42, 66, 0.35);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #df3550, #9e1831);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f7d070;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+    .btn-secondary:hover {
+      background: rgba(212, 175, 55, 0.15);
+      color: #fff;
+    }
+
+    /* Main Workspace Layout */
+    .workspace {
+      display: flex;
+      flex: 1;
+      padding: 30px;
+      gap: 36px;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1350px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Sidebar Form */
+    .sidebar-panel {
+      width: 380px;
+      background: rgba(22, 24, 34, 0.88);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-heading {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: var(--gold-2);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #b8b8cc;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .qr-style-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(13, 14, 20, 0.6);
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      cursor: pointer;
+      color: #ddd;
+    }
+    .radio-label input {
+      accent-color: var(--gold-1);
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      background: rgba(13, 14, 20, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      transition: border 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--gold-1);
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: #8c8ca5;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Card Preview Display */
+    .preview-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stage-notice {
+      font-size: 12px;
+      color: #a8a8c0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* THE PRINTABLE CARD (Standard A6 ratio: 105mm x 148mm = 420px x 594px) */
+    .gift-card-wrapper {
+      width: 420px;
+      height: 594px;
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(212, 175, 55, 0.5);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform-origin: top center;
+
+      /* GORGEOUS BOUQUET BACKGROUND */
+      background-image:
+        linear-gradient(to bottom, rgba(10, 10, 14, 0.5) 0%, rgba(10, 10, 14, 0.15) 30%, rgba(10, 10, 14, 0.8) 70%, rgba(10, 10, 14, 0.95) 100%),
+        url('/bouquet-bg.jpg');
+      background-size: cover;
+      background-position: center 32%;
+      background-repeat: no-repeat;
+    }
+
+    /* Luxury border layers */
+    .card-border-outer {
+      border: 2px solid var(--gold-1);
+      border-radius: 8px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 16px 14px;
+      background: radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%);
+    }
+
+    .card-border-inner {
+      position: absolute;
+      inset: 4px;
+      border: 1px dashed rgba(247, 208, 112, 0.5);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    /* Card Header */
+    .card-header {
+      text-align: center;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .card-badge {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #fff;
+      background: rgba(201, 42, 66, 0.85);
+      padding: 3px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(247, 208, 112, 0.6);
+      text-transform: uppercase;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 21px;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 8px rgba(212, 175, 55, 0.5);
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-size: 11px;
+      color: #f7d070;
+      font-style: italic;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+    }
+
+    /* QR Code Tag Pin - LUXURY GIFT TAG WITH HIGH CONTRAST */
+    .card-qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 8px 0;
+      position: relative;
+    }
+
+    /* Tag Ribbon / Pin String effect */
+    .tag-pin-loop {
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border: 2px solid var(--gold-1);
+      border-radius: 50%;
+      margin-bottom: -7px;
+      z-index: 5;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    }
+
+    .qr-frame {
+      background: #ffffff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 0 2px var(--gold-1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    #card-qr-img {
+      width: 175px !important;
+      height: 175px !important;
+      display: block;
+      image-rendering: pixelated;
+      border-radius: 4px;
+    }
+
+    #card-qr-canvas {
+      width: 175px !important;
+      height: 175px !important;
+      display: none;
+      image-rendering: pixelated;
+    }
+
+    .qr-badge-rose {
+      position: absolute;
+      top: -10px;
+      right: 12px;
+      background: #ffffff;
+      border: 1px solid var(--gold-1);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    .qr-instruction {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      margin-top: 10px;
+      max-width: 320px;
+      line-height: 1.35;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .qr-subtext {
+      font-size: 9.5px;
+      color: #f7d070;
+      margin-top: 2px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Handwriting & Message Box */
+    .card-message-box {
+      margin-top: auto;
+      background: rgba(18, 19, 28, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .message-recipient-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold-2);
+    }
+
+    .recipient-text {
+      font-family: 'Great Vibes', cursive;
+      font-size: 21px;
+      font-weight: 400;
+      color: #ffffff;
+      flex: 1;
+      border-bottom: 1px dotted rgba(212, 175, 55, 0.5);
+      padding-bottom: 2px;
+    }
+
+    .message-body {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 11.5px;
+      color: #e5e5eb;
+      line-height: 1.45;
+      min-height: 44px;
+    }
+
+    .message-signature-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .signature-text {
+      font-family: 'Great Vibes', cursive;
+      font-size: 22px;
+      color: var(--gold-2);
+    }
+
+    /* PRINT STYLES - A6 PAPER STANDARD */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+      }
+
+      .no-print, .top-controls, .sidebar-panel, .stage-notice {
+        display: none !important;
+      }
+
+      .workspace {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        display: block !important;
+      }
+
+      .preview-stage {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .gift-card-wrapper {
+        width: 105mm !important;
+        height: 148mm !important;
+        margin: 0 auto !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-inside: avoid;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      @page {
+        size: 105mm 148mm;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Bar -->
+  <header class="top-controls no-print">
+    <div class="controls-brand">
+      <span class="brand-icon">💐</span>
+      <div>
+        <div class="brand-title">Thiệp In 20/10 & QR Hoa Hồng Nghệ Thuật</div>
+        <div class="brand-subtitle">Mã QR đóa hoa hồng độc đáo quét mượt mà trên camera</div>
+      </div>
+    </div>
+    <div class="controls-actions">
+      <a href="/" class="btn btn-secondary">🌸 Xem Web 3D</a>
+      <button id="btn-download-qr" class="btn btn-secondary">📥 Tải Ảnh QR Hoa Hồng</button>
+      <button id="btn-print" class="btn btn-primary">🖨️ In Thiệp Ngay (A6)</button>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <main class="workspace">
+    <!-- Left Configuration Panel -->
+    <aside class="sidebar-panel no-print">
+      <h2 class="panel-heading">Tùy Chỉnh Thiệp & QR</h2>
+
+      <div class="form-group">
+        <label class="form-label">Phong Cách Mã QR</label>
+        <div class="qr-style-options">
+          <label class="radio-label">
+            <input type="radio" name="qr-style" value="artistic-rose" checked>
+            <span>🌹 <strong>Hoa Hồng Nghệ Thuật</strong> (Đóa hồng nở rộ)</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="qr-style" value="artistic-bouquet">
+            <span>💐 <strong>Bó Hoa Thực Tế</strong> (Từ ảnh hoa của bạn)</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="qr-style" value="classic">
+            <span>⬛ <strong>Mã QR Chuẩn Cổ Điển</strong> (Tương phản cao)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-url">Đường Link Web Quà Tặng (URL)</label>
+        <input type="text" id="input-url" class="form-input" value="http://192.168.1.11:3000" />
+        <div class="hint-text">
+          • Cùng Wi-Fi: <code>http://192.168.1.11:3000</code><br>
+          • Khác Wi-Fi / 4G: Nhập link deploy Netlify/Vercel của bạn.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-recipient">Gửi Tặng (Tên Người Nhận)</label>
+        <input type="text" id="input-recipient" class="form-input" value="Người Phụ Nữ Tôi Yêu Thương" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-message">Lời Chúc / Lời Nhắn</label>
+        <textarea id="input-message" class="form-textarea">Nhân ngày Phụ Nữ Việt Nam 20/10, chúc bạn luôn xinh đẹp, rạng rỡ như đóa hồng và ngập tràn niềm vui, hạnh phúc!</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-sender">Ký Tên (Người Tặng)</label>
+        <input type="text" id="input-sender" class="form-input" value="Thương mến gửi tặng" />
+      </div>
+    </aside>
+
+    <!-- Right Preview Stage -->
+    <section class="preview-stage">
+      <div class="stage-notice no-print">
+        <span>💡</span> Bấm <strong>"In Thiệp Ngay"</strong> để xem hộp thoại in chuẩn khổ A6 (105 x 148 mm).
+      </div>
+
+      <!-- Printable Card DOM -->
+      <article class="gift-card-wrapper" id="gift-card-element">
+        <div class="card-border-outer">
+          <div class="card-border-inner"></div>
+
+          <!-- Card Header -->
+          <div class="card-header">
+            <div class="card-badge">🌹 20 · 10 SPECIAL EDITION 🌹</div>
+            <h1 class="card-title">Chúc Mừng Ngày<br>Phụ Nữ Việt Nam</h1>
+            <p class="card-subtitle">Một món quà đặc biệt được tạo riêng gửi tới bạn</p>
+          </div>
+
+          <!-- Isolated QR Scan Tag Box -->
+          <div class="card-qr-section">
+            <div class="tag-pin-loop"></div>
+            <div class="qr-frame">
+              <div class="qr-badge-rose">🌹</div>
+              <img id="card-qr-img" src="/artistic-qr-rose.png" alt="Mã QR Hoa Hồng" />
+              <canvas id="card-qr-canvas"></canvas>
+            </div>
+            <p class="qr-instruction">Dùng camera điện thoại quét đóa hoa để mở trang web 3D & âm nhạc</p>
+            <span class="qr-subtext">(Tương thích iPhone Camera, Android & Zalo)</span>
+          </div>
+
+          <!-- Message & Signature Area -->
+          <div class="card-message-box">
+            <div class="message-recipient-row">
+              <span>Gửi:</span>
+              <span class="recipient-text" id="card-recipient-display">Người Phụ Nữ Tôi Yêu Thương</span>
+            </div>
+            <div class="message-body" id="card-message-display">
+              Nhân ngày Phụ Nữ Việt Nam 20/10, chúc bạn luôn xinh đẹp, rạng rỡ như đóa hồng và ngập tràn niềm vui, hạnh phúc!
+            </div>
+            <div class="message-signature-row">
+              <span class="signature-text" id="card-sender-display">Thương mến gửi tặng</span>
+            </div>
+          </div>
+
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const inputUrl = document.getElementById('input-url');
+    const inputRecipient = document.getElementById('input-recipient');
+    const inputMessage = document.getElementById('input-message');
+    const inputSender = document.getElementById('input-sender');
+
+    const cardRecipientDisplay = document.getElementById('card-recipient-display');
+    const cardMessageDisplay = document.getElementById('card-message-display');
+    const cardSenderDisplay = document.getElementById('card-sender-display');
+    const cardQrImg = document.getElementById('card-qr-img');
+    const cardQrCanvas = document.getElementById('card-qr-canvas');
+
+    const btnPrint = document.getElementById('btn-print');
+    const btnDownloadQr = document.getElementById('btn-download-qr');
+    const styleRadios = document.querySelectorAll('input[name="qr-style"]');
+
+    function updateQrStyle() {
+      const selected = document.querySelector('input[name="qr-style"]:checked').value;
+      if (selected === 'artistic-rose') {
+        cardQrImg.src = '/artistic-qr-rose.png';
+        cardQrImg.style.display = 'block';
+        cardQrCanvas.style.display = 'none';
+      } else if (selected === 'artistic-bouquet') {
+        cardQrImg.src = '/artistic-qr-bouquet.png';
+        cardQrImg.style.display = 'block';
+        cardQrCanvas.style.display = 'none';
+      } else {
+        cardQrImg.style.display = 'none';
+        cardQrCanvas.style.display = 'block';
+        renderClassicQr();
+      }
+    }
+
+    function renderClassicQr() {
+      const url = inputUrl.value.trim() || 'http://192.168.1.11:3000';
+      if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
+        window.QRCode.toCanvas(cardQrCanvas, url, {
+          width: 350,
+          margin: 4,
+          errorCorrectionLevel: 'H',
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        });
+      }
+    }
+
+    styleRadios.forEach(radio => {
+      radio.addEventListener('change', updateQrStyle);
+    });
+
+    // Dynamic text binding
+    inputRecipient.addEventListener('input', () => {
+      cardRecipientDisplay.textContent = inputRecipient.value || 'Người Thương';
+    });
+
+    inputMessage.addEventListener('input', () => {
+      cardMessageDisplay.textContent = inputMessage.value || '';
+    });
+
+    inputSender.addEventListener('input', () => {
+      cardSenderDisplay.textContent = inputSender.value || '';
+    });
+
+    // Print action
+    btnPrint.addEventListener('click', () => {
+      window.print();
+    });
+
+    // Download QR
+    btnDownloadQr.addEventListener('click', () => {
+      const selected = document.querySelector('input[name="qr-style"]:checked').value;
+      const link = document.createElement('a');
+      if (selected === 'artistic-rose') {
+        link.download = 'artistic-qr-rose-20-10.png';
+        link.href = '/artistic-qr-rose.png';
+        link.click();
+      } else if (selected === 'artistic-bouquet') {
+        link.download = 'artistic-qr-bouquet-20-10.png';
+        link.href = '/artistic-qr-bouquet.png';
+        link.click();
+      } else {
+        const tempCanvas = document.createElement('canvas');
+        window.QRCode.toCanvas(tempCanvas, inputUrl.value || 'http://192.168.1.11:3000', {
+          width: 1024,
+          margin: 4,
+          errorCorrectionLevel: 'H'
+        }, () => {
+          link.download = 'qr-code-classic-20-10.png';
+          link.href = tempCanvas.toDataURL('image/png');
+          link.click();
+        });
+      }
+    });
+
+    // Initial setup
+    window.addEventListener('DOMContentLoaded', () => {
+      updateQrStyle();
+    });
+  </script>
+</body>
+</html>

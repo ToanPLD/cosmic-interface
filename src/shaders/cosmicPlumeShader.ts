@@ -72,23 +72,27 @@ export const CosmicPlumeShader = {
       // Layered noise for cosmic cloud turbulence
       float n1 = snoise(vec2(uCoord * 1.5, vCoord * 2.0)) * 0.5 + 0.5;
       float n2 = snoise(vec2(uCoord * 3.5, vCoord * 4.0 + n1 * 1.5)) * 0.5 + 0.5;
-      float turbulence = n1 * 0.6 + n2 * 0.4;
+      float turbulence = clamp(n1 * 0.6 + n2 * 0.4, 0.0, 1.0);
 
       // Cross-sectional feathering: brightest in center, soft on tube edges
-      float radialEdge = sin(vUv.y * 3.14159265);
+      // Safely clamp radialEdge base before pow()
+      float safeY = clamp(vUv.y, 0.0, 1.0);
+      float radialEdge = clamp(sin(safeY * 3.14159265), 0.0, 1.0);
       float coreFactor = pow(radialEdge, 2.2);
 
       // Longitudinal intensity: denser and hotter as it approaches the accretion ring
-      float approachHotness = pow(vUv.x, 1.2);
-      float startFade = smoothstep(0.0, 0.2, vUv.x);
-      float endFade = smoothstep(1.0, 0.85, vUv.x);
+      float safeX = clamp(vUv.x, 0.0, 1.0);
+      float approachHotness = pow(safeX, 1.2);
+      float startFade = smoothstep(0.0, 0.2, safeX);
+      float endFade = smoothstep(1.0, 0.85, safeX);
 
       // Color composition
       vec3 color = mix(uColorDeep, uColorMid, turbulence);
       color = mix(color, uColorCore, coreFactor * approachHotness);
 
-      float alpha = coreFactor * (0.35 + turbulence * 0.4) * startFade * (0.4 + endFade * 0.6) * 0.8;
-      gl_FragColor = vec4(color * uIntensity * 1.1, alpha);
+      float alpha = clamp(coreFactor * (0.35 + turbulence * 0.4) * startFade * (0.4 + endFade * 0.6) * 0.8, 0.0, 1.0);
+      vec3 finalColor = clamp(color * uIntensity * 1.1, 0.0, 60.0);
+      gl_FragColor = vec4(finalColor, alpha);
     }
   `
 };

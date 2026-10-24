@@ -11,6 +11,15 @@ export class HolographicCard extends THREE.Group {
   public verticalAmplitude: number;
   public bobbingFrequency: number;
 
+  // Persistent scratch vectors to eliminate per-frame GC allocations
+  private static readonly _scratchLocalPos = new THREE.Vector3();
+  private static readonly _scratchCamToCenterDir = new THREE.Vector3();
+  private static readonly _scratchCamToCardVec = new THREE.Vector3();
+  private static readonly _scratchToCamera = new THREE.Vector3();
+  private static readonly _scratchOrbitalNormal = new THREE.Vector3();
+  private static readonly _scratchTargetNormal = new THREE.Vector3();
+  private static readonly _scratchLookTarget = new THREE.Vector3();
+
   constructor(
     texture: THREE.Texture,
     orbitRadius: number,
@@ -69,18 +78,18 @@ export class HolographicCard extends THREE.Group {
       this.verticalOffset +
       Math.sin(this.initialPhase + elapsedTime * this.bobbingFrequency) * this.verticalAmplitude;
 
-    const localPos = new THREE.Vector3(rawX, rawY, rawZ);
+    HolographicCard._scratchLocalPos.set(rawX, rawY, rawZ);
 
     // 3. Apply the 3D orbital plane inclination matrix
-    localPos.applyMatrix4(orbitInclinationMatrix);
-    this.position.copy(localPos);
+    HolographicCard._scratchLocalPos.applyMatrix4(orbitInclinationMatrix);
+    this.position.copy(HolographicCard._scratchLocalPos);
 
     // 4. Calculate camera-relative distance & sightline projection
     // Optical axis from camera to central singularity at (0, 0, 0)
     const centerDistToCam = cameraPosition.length();
-    const camToCenterDir = new THREE.Vector3(0, 0, 0).sub(cameraPosition).normalize();
-    const camToCardVec = new THREE.Vector3().subVectors(this.position, cameraPosition);
-    const sightlineProjection = camToCardVec.dot(camToCenterDir);
+    HolographicCard._scratchCamToCenterDir.copy(cameraPosition).negate().normalize();
+    HolographicCard._scratchCamToCardVec.subVectors(this.position, cameraPosition);
+    const sightlineProjection = HolographicCard._scratchCamToCardVec.dot(HolographicCard._scratchCamToCenterDir);
 
     // diff: positive when the card is in foreground (in front of core), negative when behind
     const diff = centerDistToCam - sightlineProjection;
@@ -94,27 +103,29 @@ export class HolographicCard extends THREE.Group {
     }
 
     // 5. Dynamic Render Order for Realistic Occlusion & Energy Veiling:
-    // When behind the core, render before the accretion disk (renderOrder = 2)
-    // so the black hole event horizon occludes it, and the glowing accretion disk overlays it.
-    // When in the foreground, render above the accretion disk (renderOrder = 20).
     if (diff > 0.0) {
       this.mesh.renderOrder = 20;
     } else {
       this.mesh.renderOrder = 2;
     }
 
-    // 6. Camera-Facing Alignment:
-    // Panels gently rotate to face the camera as they pass through the front,
-    // then gradually turn away towards the orbital tangent as they move behind the core.
-    const toCamera = new THREE.Vector3().subVectors(cameraPosition, this.position).normalize();
-    const orbitalNormal = this.position.clone().normalize();
+    // 6. Camera-Facing Alignment with Gimbal-Lock Prevention:
+    HolographicCard._scratchToCamera.subVectors(cameraPosition, this.position).normalize();
+    HolographicCard._scratchOrbitalNormal.copy(this.position).normalize();
 
     // Lerp from outward orbital normal to direct camera-facing vector
-    const targetNormal = new THREE.Vector3()
-      .lerpVectors(orbitalNormal, toCamera, easedFactor * 0.88 + 0.12)
+    HolographicCard._scratchTargetNormal
+      .lerpVectors(HolographicCard._scratchOrbitalNormal, HolographicCard._scratchToCamera, easedFactor * 0.88 + 0.12)
       .normalize();
 
-    const lookTarget = this.position.clone().add(targetNormal);
-    this.lookAt(lookTarget);
+    // Adaptive up vector to prevent gimbal lock at zenith/nadir
+    if (Math.abs(HolographicCard._scratchTargetNormal.y) > 0.98) {
+      this.up.set(0, 0, 1);
+    } else {
+      this.up.set(0, 1, 0);
+    }
+
+    HolographicCard._scratchLookTarget.addVectors(this.position, HolographicCard._scratchTargetNormal);
+    this.lookAt(HolographicCard._scratchLookTarget);
   }
 }
